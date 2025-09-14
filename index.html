@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Anoma Intent Refill — Clean Demo + Proposals</title>
+<style>
+:root{
+  --bg:#0b0f14; --card:#111722; --ink:#eaf0f7; --sub:#a8b3c4;
+  --mut:#22304a; --ring:0 0 0 3px rgba(90,168,255,.25);
+  --pri1:#5aa8ff; --pri2:#3b79ff; --ok1:#35d49a; --bad1:#ff6b6b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font:500 16px/1.55 Inter,system-ui,Segoe UI,Roboto,Ubuntu;
+  color:var(--ink); background:radial-gradient(1200px 700px at 80% -10%, #132033, #0b0f14 40%);
+  min-height:100svh; padding:28px 18px; display:flex; justify-content:center;
+}
+.wrap{width:min(980px,100%); display:grid; gap:18px}
+
+header{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+h1{margin:0; font-size:26px; letter-spacing:.2px}
+.subtitle{color:var(--sub); font-size:14px}
+
+.steps{display:flex; gap:8px; flex-wrap:wrap}
+.step{
+  padding:6px 10px; border:1px solid var(--mut); color:var(--sub);
+  border-radius:999px; font-size:12px; background:#0f1623;
+}
+.step.active{color:#07101a; border-color:transparent; background:linear-gradient(180deg,var(--pri1),var(--pri2)); font-weight:800}
+
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border:1px solid var(--mut); border-radius:16px; padding:18px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.card h2{margin:0 0 10px 0; font-size:18px}
+.hint{color:var(--sub); font-size:13px; margin-top:2px}
+
+.grid{display:grid; gap:12px}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+label{font-size:14px; color:var(--sub)}
+
+input,select{
+  width:100%; max-width:340px; padding:10px 12px; border-radius:10px;
+  border:1px solid var(--mut); background:#0e1420; color:var(--ink);
+  outline:none; transition:.18s ease;
+}
+input:focus,select:focus{box-shadow:var(--ring); border-color:#2f4970}
+
+button{
+  appearance:none; border:1px solid var(--mut); background:#0f1623; color:var(--ink);
+  padding:10px 14px; border-radius:10px; cursor:pointer; transition:.18s ease; font-weight:800;
+}
+button:hover{transform:translateY(-1px); box-shadow:var(--ring)}
+button.primary{border-color:transparent; background:linear-gradient(180deg,var(--pri1),var(--pri2)); color:#07101a}
+button.good{border-color:transparent; background:linear-gradient(180deg,#35d49a,#0fa36d); color:#041d14}
+button.bad{border-color:transparent; background:linear-gradient(180deg,#ff7878,#e84b4b)}
+button.ghost{background:#0e1420}
+
+pre{
+  margin:0; padding:12px; border:1px solid #1a2331; background:#0b111c;
+  border-radius:12px; max-height:320px; overflow:auto; font:500 13px/1.4 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  color:#d8e2f2;
+}
+.kv{display:grid; grid-template-columns:140px 1fr; gap:8px; font-size:14px}
+.kv div{padding:8px 10px; border:1px dashed #2b364b; background:rgba(255,255,255,.02); border-radius:10px}
+.kv .k{color:var(--sub)}
+
+.status{
+  position:sticky; top:12px; margin-left:auto; width:max-content; padding:8px 10px;
+  border-radius:999px; border:1px solid var(--mut); background:#0f1623; color:var(--sub); font-size:12px;
+}
+.status.ready{color:#041d14; border-color:transparent; background:linear-gradient(180deg,#35d49a,#0fa36d)}
+.status.warn{color:#1a0a0a; border-color:transparent; background:linear-gradient(180deg,#ffd166,#ffa62b)}
+.status.err {color:#1d0404; border-color:transparent; background:linear-gradient(180deg,#ff9b9b,#ff6b6b)}
+
+.proposals{display:grid; gap:10px}
+.prop{
+  display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center;
+  border:1px solid #233148; background:#0d1320; border-radius:12px; padding:10px 12px;
+}
+.prop .meta{font-size:13px; color:var(--sub)}
+.badge{display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid #2a3a55; background:#0e1624; font-size:11px; color:#9fb2cc; margin-right:6px}
+
+footer{color:var(--sub); font-size:12px; text-align:center; margin-top:6px}
+@media (max-width:640px){ .kv{grid-template-columns:1fr} h1{font-size:22px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Anoma Intent Refill — Frontend Mock</h1>
+      <div class="subtitle">Say the goal → solvers propose routes → settle (mock). Pure HTML/CSS/JS.</div>
+    </div>
+    <div id="status" class="status">Waiting</div>
+  </header>
+
+  <div class="steps">
+    <div id="s1" class="step active">1. Generate Intent</div>
+    <div id="s2" class="step">2. Solver Proposals</div>
+    <div id="s3" class="step">3. Route & Settle</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="card">
+    <h2>Step 1 — Generate Intent</h2>
+    <div class="grid">
+      <div class="row">
+        <div>
+          <label>Destination wallet</label><br/>
+          <input id="dst" placeholder="0x... (EVM address)" value="0xDeaDbeef00000000000000000000000000000000"/>
+        </div>
+        <div>
+          <label>Amount (ETH)</label><br/>
+          <input id="amt" type="number" step="0.0001" min="0" placeholder="0.01" value="0.01"/>
+        </div>
+        <div>
+          <label>Have (asset / chain)</label><br/>
+          <select id="have">
+            <option>USDC on Ethereum</option>
+            <option>USDT on Ethereum</option>
+            <option>ETH on Ethereum</option>
+            <option>USDC on Arbitrum</option>
+          </select>
+        </div>
+        <div>
+          <label>Need (asset / chain)</label><br/>
+          <select id="need">
+            <option>ETH on Arbitrum</option>
+            <option>ETH on Base</option>
+            <option>ETH on Optimism</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <label><input id="priv" type="checkbox" checked/> Privacy preferred</label>
+        <label><input id="tight" type="checkbox"/> Tight slippage</label>
+        <label><input id="fast" type="checkbox" checked/> Fast route</label>
+      </div>
+      <div class="row">
+        <button id="btnIntent" class="primary">Generate Intent</button>
+        <button id="copyIntent" class="ghost">Copy Intent</button>
+      </div>
+      <pre id="intentView">// intent will appear here</pre>
+      <div class="hint">Điền ví + amount rồi bấm “Generate Intent”.</div>
+    </div>
+  </section>
+
+  <!-- STEP 2: PROPOSALS -->
+  <section class="card">
+    <h2>Step 2 — Solver Proposals</h2>
+    <div class="grid">
+      <div class="row">
+        <button id="btnPropose" class="primary">Get Proposals</button>
+        <button id="copyProp" class="ghost">Copy Selected Proposal</button>
+      </div>
+      <div id="props" class="proposals">
+        <!-- proposals render here -->
+      </div>
+      <div class="hint">Mỗi proposal có khác nhau về fee/ETA/privacy. Bấm Select để dùng proposal đó.</div>
+    </div>
+  </section>
+
+  <!-- STEP 3: ROUTE + SETTLE -->
+  <section class="card">
+    <h2>Step 3 — Route & Settle (mock)</h2>
+    <div class="grid">
+      <div class="row">
+        <button id="btnRoute" class="primary">Use Selected Proposal as Route</button>
+        <button id="copyRoute" class="ghost">Copy Route</button>
+      </div>
+      <pre id="routeView">// route will appear here</pre>
+
+      <div class="kv">
+        <div class="k">Hops</div><div id="kvHops">–</div>
+        <div class="k">Fee estimate</div><div id="kvFee">–</div>
+        <div class="k">ETA</div><div id="kvEta">–</div>
+      </div>
+
+      <div class="row">
+        <button id="btnSettle" class="good">Settle (mock)</button>
+      </div>
+      <pre id="settleView">// settlement result will appear here</pre>
+
+      <div class="hint">Mock only: đánh dấu từng bước “ok: true” và status: settled.</div>
+    </div>
+  </section>
+
+  <footer>Frontend-only demo • No wallets • No RPC • Just showing the intent → proposals → route → settle UX</footer>
+</div>
+
+<script>
+const $ = sel => document.querySelector(sel);
+const statusEl = $("#status");
+const stepEls = [$("#s1"), $("#s2"), $("#s3")];
+
+let INTENT = null;
+let PROPOSALS = [];
+let SELECTED = null;
+let ROUTE = null;
+
+function setStatus(text, cls=null){
+  statusEl.textContent = text;
+  statusEl.className = "status " + (cls || "");
+}
+function setStep(n){ stepEls.forEach((el,i)=>el.classList.toggle("active", i===n-1)); }
+function scrollInto(viewEl){ viewEl.scrollIntoView({behavior:"smooth", block:"center"}); }
+
+function nowIso(){ return new Date().toISOString(); }
+function rand(n){ return Math.floor(Math.random()*n); }
+function pick(a){ return a[rand(a.length)]; }
+
+function generateIntent(){
+  const dst = $("#dst").value.trim();
+  const amt = parseFloat($("#amt").value);
+  const have = $("#have").value;
+  const need = $("#need").value;
+
+  if(!dst || !dst.startsWith("0x") || dst.length < 10){
+    setStatus("Invalid destination address", "err"); return;
+  }
+  if(!(amt>0)){ setStatus("Amount must be > 0", "err"); return; }
+
+  INTENT = {
+    type: "wallet_refill",
+    created_at: nowIso(),
+    goal: {
+      end_condition: { asset: need.split(" on ")[0], chain: need.split(" on ")[1], min_amount: amt },
+      destination: dst
+    },
+    resources: { use: have },
+    constraints: {
+      privacy_preferred: $("#priv").checked,
+      tight_slippage: $("#tight").checked,
+      fast_route: $("#fast").checked
+    },
+    fee_policy: { pay_in: "best_effort", sponsor_ok: true }
+  };
+
+  $("#intentView").textContent = JSON.stringify(INTENT, null, 2);
+  setStatus("Intent generated", "ready"); setStep(2); scrollInto($("#intentView"));
+}
+
+function genOneProposal(i){
+  const hops = [
+    { type:"swap", venue: pick(["DEX-A","RFQ-1","Auction-X"]) },
+    { type:"bridge", venue: pick(["Bridge-B","Bridge-C"]) },
+    { type:"transfer", venue:"-" }
+  ];
+  const fee = +(0.09 + Math.random()*0.15).toFixed(3); // 0.09–0.24%
+  const eta = 2 + rand(8); // 2–9 minutes
+  const privacy = pick(["private","private","public"]); // bias to private
+  const slippage = pick(["tight","normal"]);
+  return {
+    id: "prop_"+(i+1),
+    proposed_at: nowIso(),
+    hops,
+    fee_estimate: fee,
+    eta_minutes: eta,
+    privacy_mode: privacy,
+    slippage: slippage,
+    solver: pick(["Solver-Delta","Solver-Quasar","Solver-Nexus","Solver-Arc"])
+  };
+}
+
+function renderProposals(){
+  const box = $("#props");
+  box.innerHTML = "";
+  PROPOSALS.forEach(p=>{
+    const el = document.createElement("div");
+    el.className = "prop";
+    const left = document.createElement("div");
+    const right = document.createElement("div");
+
+    const title = document.createElement("div");
+    title.innerHTML = `<span class="badge">${p.solver}</span> <span class="badge">${p.privacy_mode}</span> <span class="badge">${p.slippage}</span>`;
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `hops: ${p.hops.map(h=>h.type).join(" → ")}  •  fee: ${p.fee_estimate}%  •  ETA: ${p.eta_minutes}m`;
+
+    left.appendChild(title); left.appendChild(meta);
+
+    const btn = document.createElement("button");
+    btn.className = "primary";
+    btn.textContent = "Select";
+    btn.addEventListener("click", ()=>{
+      SELECTED = p;
+      setStatus(`Selected ${p.id}`, "ready");
+      [...document.querySelectorAll(".prop")].forEach(x=>x.style.outline="none");
+      el.style.outline = "2px solid rgba(90,168,255,.7)";
+      setStep(3);
+    });
+    right.appendChild(btn);
+
+    el.appendChild(left); el.appendChild(right);
+    box.appendChild(el);
+  });
+}
+
+function getProposals(){
+  if(!INTENT){ setStatus("Generate intent first", "err"); return; }
+  PROPOSALS = [genOneProposal(0), genOneProposal(1), genOneProposal(2)];
+  renderProposals();
+  setStatus("3 proposals ready", "ready"); scrollInto($("#props"));
+}
+
+function proposalToRoute(p){
+  return {
+    intent_id: Math.random().toString(36).slice(2,10),
+    proposed_at: p.proposed_at,
+    hops: [
+      { type:"swap", venue: p.hops[0].venue, from: INTENT.resources.use, to: "bridgeable ETH", ok: null },
+      { type:"bridge", venue: p.hops[1].venue, from:"L1", to:INTENT.goal.end_condition.chain, ok: null },
+      { type:"transfer", to: INTENT.goal.end_condition.destination, amount: INTENT.goal.end_condition.min_amount, asset: INTENT.goal.end_condition.asset, ok: null }
+    ],
+    fee_estimate: p.fee_estimate,
+    eta_minutes: p.eta_minutes,
+    privacy_mode: p.privacy_mode,
+    notes: `selected ${p.id} (${p.solver})`
+  };
+}
+
+function useSelectedAsRoute(){
+  if(!SELECTED){ setStatus("Select a proposal first", "err"); return; }
+  ROUTE = proposalToRoute(SELECTED);
+  $("#routeView").textContent = JSON.stringify(ROUTE, null, 2);
+  $("#kvHops").textContent = ROUTE.hops.map(h=>h.type).join(" → ");
+  $("#kvFee").textContent = ROUTE.fee_estimate + " % est.";
+  $("#kvEta").textContent = ROUTE.eta_minutes + " min";
+  setStatus("Route prepared from proposal", "ready"); scrollInto($("#routeView"));
+}
+
+function settleMock(){
+  if(!ROUTE){ setStatus("Prepare route first", "err"); return; }
+  const settled = JSON.parse(JSON.stringify(ROUTE));
+  settled.hops = settled.hops.map(h => ({...h, ok:true, tx_hash:"0x"+Math.random().toString(16).slice(2,10)}));
+  settled.status = "settled";
+  settled.settled_at = nowIso();
+  $("#settleView").textContent = JSON.stringify(settled, null, 2);
+  setStatus("Settlement complete (mock)", "ready"); scrollInto($("#settleView"));
+}
+
+function copy(el, btn){
+  const txt = el.textContent;
+  if(!txt || txt.startsWith("//")) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const old = btn.textContent; btn.textContent = "Copied";
+    setTimeout(()=> btn.textContent = old, 1000);
+  });
+}
+
+/* Wire up */
+$("#btnIntent").addEventListener("click", generateIntent);
+$("#btnPropose").addEventListener("click", getProposals);
+$("#btnRoute").addEventListener("click", useSelectedAsRoute);
+$("#btnSettle").addEventListener("click", settleMock);
+$("#copyIntent").addEventListener("click", () => copy($("#intentView"), $("#copyIntent")));
+$("#copyProp").addEventListener("click", ()=>{
+  if(!SELECTED){ setStatus("Select a proposal first", "err"); return; }
+  const txt = JSON.stringify(SELECTED, null, 2);
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn = $("#copyProp"); const old = btn.textContent;
+    btn.textContent = "Copied"; setTimeout(()=> btn.textContent = old, 1000);
+  });
+});
+$("#copyRoute").addEventListener("click", () => copy($("#routeView"), $("#copyRoute")));
+</script>
+</body>
+</html>
